@@ -1,0 +1,7 @@
+mavros/test_mavros
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/cmake.lock /home/hazortremz/my_drone_space/devel/./cmake.lock
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/share/test_mavros/cmake/test_mavrosConfig.cmake /home/hazortremz/my_drone_space/devel/share/test_mavros/cmake/test_mavrosConfig.cmake
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/share/test_mavros/cmake/test_mavrosConfig-version.cmake /home/hazortremz/my_drone_space/devel/share/test_mavros/cmake/test_mavrosConfig-version.cmake
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/lib/libmavros_sitl_test.so /home/hazortremz/my_drone_space/devel/lib/libmavros_sitl_test.so
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/lib/test_mavros/sitl_test_node /home/hazortremz/my_drone_space/devel/lib/test_mavros/sitl_test_node
+/home/hazortremz/my_drone_space/devel/.private/test_mavros/lib/pkgconfig/test_mavros.pc /home/hazortremz/my_drone_space/devel/lib/pkgconfig/test_mavros.pc

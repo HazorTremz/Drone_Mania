@@ -1,0 +1,6 @@
+devel_space: /home/hazortremz/my_drone_space/devel
+install: false
+install_space: /home/hazortremz/my_drone_space/install
+profile: default
+source_space: /home/hazortremz/my_drone_space/src
+workspace: /home/hazortremz/my_drone_space

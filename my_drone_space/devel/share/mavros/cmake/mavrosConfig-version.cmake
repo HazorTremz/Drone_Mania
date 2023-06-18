@@ -1,0 +1,1 @@
+/home/hazortremz/my_drone_space/devel/.private/mavros/share/mavros/cmake/mavrosConfig-version.cmake

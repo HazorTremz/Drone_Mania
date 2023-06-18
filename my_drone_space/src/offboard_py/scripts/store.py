@@ -1,0 +1,250 @@
+#! /usr/bin/env python3
+import rospy
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import TimeReference, Image
+from geometry_msgs.msg import PoseStamped,TwistStamped
+from mavros_msgs.msg import State, Thrust
+from mavros_msgs.srv import CommandBool, CommandBoolRequest, SetMode, SetModeRequest, ParamPush,ParamPushRequest,ParamSet,ParamSetRequest,ParamSetResponse
+from mavros_msgs.srv import ParamGet, ParamGetRequest, ParamGetResponse
+
+current_state = State()
+current_orien = PoseStamped()
+current_vel = TwistStamped()
+time_stamp = TimeReference()
+obj_distance = 0
+flag_1 = False
+flag_2 = False
+flag_3 = False
+flag_4 = False
+flag_5 = False
+flag_6 = False
+flag_7 = False
+flag_8 = False
+flag_9 = False
+reached = False
+land = False
+up_down1 = False
+up_down2 = False
+up_down3 = False
+object_detected = False
+flag_inititate = True
+check_tag = False
+def img_cb(msg):
+    global obj_distance
+    bridge = CvBridge()
+    try:
+      cv_image = bridge.imgmsg_to_cv2(msg,desired_encoding='32FC1')
+    except CvBridgeError as e:
+      print(e)
+    obj_distance = cv_image[cv_image.shape[0]//2, cv_image.shape[1]//2]
+    # cv2.imwrite(cv_image)
+    # cv2.imshow("image",cv_image)
+    # cv2.waitKey(3)
+    
+def state_cb(msg):
+    global current_state
+    current_state = msg
+
+def orien_cb(msg):
+    global current_orien
+    current_orien=  msg
+def vel_cb(msg):
+    global current_vel
+    current_vel=  msg
+def time_cb(msg):
+    global time_stamp
+    time_stamp = msg
+if __name__ == "__main__":
+    rospy.init_node("offb_node_py")
+    image_sub = rospy.Subscriber("/iris/camera/depth/image_raw", Image,callback=img_cb)
+    state_sub = rospy.Subscriber("mavros/state", State, callback = state_cb)
+    #time_sub = rospy.Subscriber("mavros/time_reference",TimeReference, callback=time_cb)
+    orientation_sub = rospy.Subscriber("mavros/local_position/pose",PoseStamped, callback= orien_cb )
+    vel_sub = rospy.Subscriber("mavros/local_position/velocity_body",TwistStamped, callback= vel_cb )
+    local_pos_pub = rospy.Publisher("mavros/setpoint_position/local", PoseStamped, queue_size=10)
+    local_vel_pub = rospy.Publisher("/mavros/setpoint_velocity/cmd_vel", TwistStamped, queue_size=10)
+    #setpoint_pub = rospy.Publisher('/mavros/setpoint_attitude/thrust', Thrust, queue_size=10)
+
+    rospy.wait_for_service("/mavros/cmd/arming")
+    arming_client = rospy.ServiceProxy("mavros/cmd/arming", CommandBool)
+    param_client = rospy.ServiceProxy("mavros_msgs/ParamSet", ParamSet)    
+
+    rospy.wait_for_service("/mavros/set_mode")
+    set_mode_client = rospy.ServiceProxy("mavros/set_mode", SetMode)
+
+    # set_param_client = rospy.ServiceProxy("mavros/param/push", ParamPush)
+    # param_get = rospy.ServiceProxy('/mavros/param/get', ParamGet)
+    # Setpoint publishing MUST be faster than 2Hz
+    rate = rospy.Rate(20)
+    # Wait for Flight Controller connection
+    while(not rospy.is_shutdown() and not current_state.connected):
+        rate.sleep()
+        # pose = PoseStamped()
+        vel_msg = TwistStamped()
+        vel_msg.header.frame_id = "base_link"
+        vel_msg.twist.linear.x = 0.0 # set desired x velocity here
+        vel_msg.twist.linear.y = 0.0 # set desired y velocity here
+        vel_msg.twist.linear.z = 2.0 # set desired z velocity here
+        vel_msg.twist.angular.x = 0.0
+        vel_msg.twist.angular.y = 0.0
+        vel_msg.twist.angular.z = 0.0
+
+        # Send a few setpoints before starting
+        for i in range(100):   
+            if(rospy.is_shutdown()):
+                break
+            vel_msg.header.stamp = rospy.Time.now()
+            local_vel_pub.publish(vel_msg)
+            # local_pos_pub.publish(pose)
+            rate.sleep()
+
+        param_set_mode = ParamSetRequest()
+        param_set_mode.param_id = "NAV_RCL_ACT"
+        param_set_mode.value = 0
+
+        offb_set_mode = SetModeRequest()
+        offb_set_mode.custom_mode = 'OFFBOARD'
+ 
+        arm_cmd = CommandBoolRequest()
+        arm_cmd.value = True
+
+        last_req = rospy.Time.now()
+    while(not rospy.is_shutdown()):
+        if (reached == False and object_detected == False):
+            vel_msg.header.stamp = rospy.Time.now()
+            local_vel_pub.publish(vel_msg)
+        # if (land == True):
+        #     offb_set_mode.custom_mode = "AUTO.LAND"
+        # setpoint_pub.publish(thrust_msg)
+        #vel.header.stamp = time_stamp.header.stamp
+        if(current_state.mode != "OFFBOARD" and (rospy.Time.now() - last_req) > rospy.Duration(5.0)):
+            if(set_mode_client.call(offb_set_mode).mode_sent == True):
+                rospy.loginfo("OFFBOARD enabled")
+            
+            last_req = rospy.Time.now()
+        else:
+            if(not current_state.armed and (rospy.Time.now() - last_req) > rospy.Duration(5.0)):
+                if(arming_client.call(arm_cmd).success == True):
+                    rospy.loginfo("Vehicle armed")
+            
+                last_req = rospy.Time.now()
+       
+        x_val = current_orien.pose.position.x
+        y_val = current_orien.pose.position.y
+        z_val = current_orien.pose.position.z
+        yaw = current_orien.pose.orientation.w
+        # rospy.loginfo(yaw)
+        # Use only when unstable z velocity/thurst
+        # if (flag_1 == True):
+        #     if( z_val > 6):
+        #         vel_msg.twist.linear.z = -0.1
+        #     else:
+        #         vel_msg.twist.linear.z = 0.1
+        if(obj_distance < 2 or object_detected == True):
+            object_detected = True
+            # rospy.loginfo(current_orien)
+            if (flag_inititate == True):
+                stay_x = current_orien.pose.position.x
+                stay_y = current_orien.pose.position.y
+                stay_z = current_orien.pose.position.z
+                flag_inititate = False
+            else:
+                pose1 = PoseStamped()
+                pose1.pose.position.x = stay_x
+                pose1.pose.position.y = stay_y
+                pose1.pose.position.z = stay_z
+                local_pos_pub.publish(pose1)
+            rospy.loginfo("collision detected")
+            # rospy.loginfo(stay_y)
+            # rospy.loginfo(stay_z)
+            # while (current_state == "OFFBOARD"):
+            #     offb_set_mode.custom_mode = 'AUTO.LOITER'
+        if(object_detected == False):
+            # rospy.loginfo("gaisaadujhauiodhjajdoiajo")
+            if (z_val > 8):
+                # while (stop_1 == False):
+                #     rospy.loginfo("getit")
+                #     if (yaw < 0.2):
+                #         vel_msg.twist.angular.z = -0.8
+                #     else:
+                #         vel_msg.twist.angular.z = 0.0
+                #         stop_1 = True
+                #     vel_msg.header.stamp = rospy.Time.now()
+                #     local_vel_pub.publish(vel_msg)
+                vel_msg.twist.linear.z = -0.4
+            if (z_val < 5):
+                if(flag_7 == True and up_down1 == False):
+                    up_down1 = True
+                    vel_msg.twist.linear.z = 0.2
+                    flag_1 = False
+                if(flag_8 == True and up_down2 == False):
+                    vel_msg.twist.linear.z = 2.5
+                    up_down2 = True
+                    flag_3 = False
+                if(flag_9 == True and up_down3 == False):
+                    up_down3 = True
+                    # rospy.loginfo("helloasdasdas")
+                    flag_5 = False
+            if ( y_val > 9.5 and flag_7 == False):
+                vel_msg.twist.linear.y = 0.0
+                vel_msg.twist.linear.z = 1.2
+                flag_7 = True
+            if ( y_val < 18 and x_val < -6 and flag_8 == False):
+                vel_msg.twist.linear.y = 0.0
+                vel_msg.twist.linear.z = 1.2
+                flag_8 = True
+            if ( y_val > 8 and x_val < -11 and flag_9 == False):
+                # rospy.loginfo("hello")
+                vel_msg.twist.linear.y = 0.0
+                vel_msg.twist.linear.z = 1.2
+                flag_9 = True
+            if (z_val > 5 and flag_1==False):
+                vel_msg.twist.linear.y = 1.2
+                vel_msg.twist.linear.z = 0.0
+                flag_1 = True
+            if(y_val > 18.8 and x_val > -2 and flag_2==False):
+                vel_msg.twist.linear.y = 0.0
+                vel_msg.twist.linear.x = -1.2
+                vel_msg.twist.linear.z = 0.0
+                flag_2 = True
+            if( x_val < -5 and x_val > -7 and flag_3==False):
+                vel_msg.twist.linear.x = 0.0
+                vel_msg.twist.linear.z = 0.0
+                vel_msg.twist.linear.y = -1.2
+                flag_3 = True
+            if(y_val <  4 and x_val < -6 and flag_4==False):
+                vel_msg.twist.linear.x = -1.2
+                vel_msg.twist.linear.y = 0.0
+                vel_msg.twist.linear.z = 0.0
+                flag_4 = True
+            if(x_val < -11.5 and flag_5==False):
+                vel_msg.twist.linear.x = 0.0
+                vel_msg.twist.linear.z = 0.0
+                vel_msg.twist.linear.y = 1.2
+                flag_5 = True
+            if(x_val < -11.5 and y_val > 19.5 and flag_6==False):
+                vel_msg.twist.linear.x = 0.0
+                vel_msg.twist.linear.y = 0.0
+                flag_6 = True
+            if (flag_6 == True):
+                if (z_val < 14 and reached == False):
+                    vel_msg.twist.linear.z = 1.0
+                else :  
+                    reached = True 
+                    if (land == False):
+                        pose = PoseStamped()
+                        pose.pose.position.x = 0
+                        pose.pose.position.y = 0
+                        pose.pose.position.z = 0
+                        if ((x_val != 0) and (y_val != 0) and (z_val != 0)):
+                            local_pos_pub.publish(pose)
+                        else: 
+                            land = True
+                    # while (current_state.mode == "OFFBOARD" and land == True):
+                    if (land == True):
+                        offb_set_mode.custom_mode = "AUTO.LAND"
+                        if current_state.mode != "AUTO.LAND":
+                            if (set_mode_client.call(offb_set_mode).mode_sent == True):
+                                rospy.loginfo("AUTO.LAND mode enable")
+        rate.sleep()

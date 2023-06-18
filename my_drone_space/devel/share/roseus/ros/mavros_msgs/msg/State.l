@@ -1,0 +1,1 @@
+/home/hazortremz/my_drone_space/devel/.private/mavros_msgs/share/roseus/ros/mavros_msgs/msg/State.l

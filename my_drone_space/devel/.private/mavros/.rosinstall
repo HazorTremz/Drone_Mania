@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/hazortremz/my_drone_space/devel/.private/mavros/setup.sh

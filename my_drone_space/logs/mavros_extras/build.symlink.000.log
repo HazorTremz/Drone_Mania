@@ -1,0 +1,6 @@
+Symlinking /home/hazortremz/my_drone_space/devel/share/mavros_extras/cmake/mavros_extrasConfig.cmake
+Symlinking /home/hazortremz/my_drone_space/devel/share/mavros_extras/cmake/mavros_extrasConfig-version.cmake
+Symlinking /home/hazortremz/my_drone_space/devel/lib/libmavros_extras.so
+Symlinking /home/hazortremz/my_drone_space/devel/lib/mavros_extras/visualization
+Symlinking /home/hazortremz/my_drone_space/devel/lib/mavros_extras/servo_state_publisher
+Symlinking /home/hazortremz/my_drone_space/devel/lib/pkgconfig/mavros_extras.pc

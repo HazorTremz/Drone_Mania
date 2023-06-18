@@ -1,0 +1,1 @@
+/home/hazortremz/my_drone_space/devel/.private/catkin_tools_prebuild/env.sh

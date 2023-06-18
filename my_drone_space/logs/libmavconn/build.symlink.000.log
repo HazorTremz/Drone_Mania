@@ -1,0 +1,5 @@
+Symlinking /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconnConfig-version.cmake
+Symlinking /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconnConfig.cmake
+Symlinking /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconn-extras.cmake
+Symlinking /home/hazortremz/my_drone_space/devel/lib/libmavconn.so
+Symlinking /home/hazortremz/my_drone_space/devel/lib/pkgconfig/libmavconn.pc

@@ -1,0 +1,1 @@
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/share/libmavconn/cmake/libmavconn-extras.cmake

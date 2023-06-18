@@ -1,0 +1,7 @@
+mavros/libmavconn
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/cmake.lock /home/hazortremz/my_drone_space/devel/./cmake.lock
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/share/libmavconn/cmake/libmavconnConfig-version.cmake /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconnConfig-version.cmake
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/share/libmavconn/cmake/libmavconnConfig.cmake /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconnConfig.cmake
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/share/libmavconn/cmake/libmavconn-extras.cmake /home/hazortremz/my_drone_space/devel/share/libmavconn/cmake/libmavconn-extras.cmake
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/lib/libmavconn.so /home/hazortremz/my_drone_space/devel/lib/libmavconn.so
+/home/hazortremz/my_drone_space/devel/.private/libmavconn/lib/pkgconfig/libmavconn.pc /home/hazortremz/my_drone_space/devel/lib/pkgconfig/libmavconn.pc
